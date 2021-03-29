@@ -12,13 +12,9 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def main():
   filepath = os.path.dirname(os.path.realpath(__file__))
-  print(filepath)
   token_path = os.path.abspath(os.path.join(filepath, 'files\\', 'token.json'))
-  print(token_path)
-  # sys.exit()
 
   user = os.getlogin()
-  print(user)
 
   creds = None
 
@@ -37,36 +33,33 @@ def main():
       token.write(creds.to_json())
 
   service = build('drive', 'v3', credentials=creds)
-
-  # results = service.files().list(
-  #   pageSize=10, fields="nextPageToken, files(id, name)").execute()
-  # items = results.get('files', [])
-
+  
   file_dir  = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
-  print(file_dir)
 
-  # for file in file_dir:
-  mimetype = MimeTypes().guess_type('files/drive_test.txt')[0]
+  if os.listdir(file_dir):
+    for f in os.listdir(file_dir):
+      print(f)
 
-  file_metadata = {'name': 'drive_test.txt'}
-  media = MediaFileUpload('files/drive_test.txt', mimetype=mimetype)
+      mimetype = MimeTypes().guess_type(f)[0]
 
-  try:
-    file = service.files().create(body=file_metadata,
-                                        media_body=media,
-                                        fields='id').execute()
-  except Exception as ex:
-    print("Exception %s " % ex)  
+      file_metadata = {'name': f, 'parents': ['']}
+                       
+      media = MediaFileUpload(os.path.join(file_dir, f), mimetype=mimetype)
 
-  print('File ID: %s' % file.get('id'))
+      try:
+        file = service.files().create(body=file_metadata,
+                                      media_body=media,
+                                      fields='id').execute()
+      except Exception as ex:
+        print("Exception %s " % ex)  
+
+      #print('File ID: %s' % file.get('id'))
+      f = None
+  else:
+    print("Directory %s is empty" % file_dir)
 
   print("Completed")
-  # if not items:
-  #   print('No files found.')
-  # else:
-  #   print('Files:')
-  #   for item in items:
-  #     print(u'{0} ({1})'.format(item['name'], item['id']))
+
 
 if __name__ == "__main__":
   main()
