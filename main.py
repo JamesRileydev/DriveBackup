@@ -7,6 +7,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
+from manage import get_parent_dir
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -34,10 +35,10 @@ def main():
 
   service = build('drive', 'v3', credentials=creds)
 
-  file_dir  = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
+  file_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
   
   if os.listdir(file_dir):
-    dir_id = get_parent_dir(service)
+    dir_id = get_parent_dir(service, filepath)
 
     for f in os.listdir(file_dir):
       print(f)
@@ -49,7 +50,7 @@ def main():
       media = MediaFileUpload(os.path.join(file_dir, f), mimetype=mimetype)
 
       try:
-        file = service.files().create(body=file_metadata,
+        service.files().create(body=file_metadata,
                                       media_body=media,
                                       fields='id').execute()
       except Exception as ex:
@@ -60,25 +61,6 @@ def main():
     print("Directory %s is empty" % file_dir)
 
   print("Completed")
-
-def get_parent_dir(service):
-  page_token = None
-  response = service.files().list(q="name='Backup'",
-                                          spaces='drive',
-                                          fields='nextPageToken, files(id, name)',
-                                          pageToken=page_token).execute()
-  
-  for file in response.get('files', []):
-      # Process change
-    id = file.get('id')
-    print(id)
-    print('Found file: %s (%s)' % (file.get('name'), file.get('id')))
-
-    if id:
-      return id
-    else:
-      print("Parent ID not found")
-      exit()
 
 
 if __name__ == "__main__":
