@@ -125,7 +125,7 @@ venv.bak/
 dmypy.json
 
 # custom 
-/files
+token.json
 credentials.json
 client_secrets.json
 config.ini
