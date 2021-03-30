@@ -127,3 +127,5 @@ dmypy.json
 # custom 
 /files
 credentials.json
+client_secrets.json
+config.ini
