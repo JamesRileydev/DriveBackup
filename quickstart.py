@@ -33,16 +33,18 @@ def main():
       token.write(creds.to_json())
 
   service = build('drive', 'v3', credentials=creds)
-  
-  file_dir  = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
 
+  file_dir  = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
+  
   if os.listdir(file_dir):
+    dir_id = get_parent_dir(service)
+
     for f in os.listdir(file_dir):
       print(f)
 
       mimetype = MimeTypes().guess_type(f)[0]
 
-      file_metadata = {'name': f, 'parents': ['']}
+      file_metadata = {'name': f, 'parents': [dir_id]}
                        
       media = MediaFileUpload(os.path.join(file_dir, f), mimetype=mimetype)
 
@@ -53,12 +55,30 @@ def main():
       except Exception as ex:
         print("Exception %s " % ex)  
 
-      #print('File ID: %s' % file.get('id'))
       f = None
   else:
     print("Directory %s is empty" % file_dir)
 
   print("Completed")
+
+def get_parent_dir(service):
+  page_token = None
+  response = service.files().list(q="name='Backup'",
+                                          spaces='drive',
+                                          fields='nextPageToken, files(id, name)',
+                                          pageToken=page_token).execute()
+  
+  for file in response.get('files', []):
+      # Process change
+    id = file.get('id')
+    print(id)
+    print('Found file: %s (%s)' % (file.get('name'), file.get('id')))
+
+    if id:
+      return id
+    else:
+      print("Parent ID not found")
+      exit()
 
 
 if __name__ == "__main__":
