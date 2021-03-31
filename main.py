@@ -12,8 +12,8 @@ from manage import get_parent_dir
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def main():
-  filepath = os.path.dirname(os.path.realpath(__file__))
-  token_path = os.path.abspath(os.path.join(filepath, 'files\\', 'token.json'))
+  file_path = os.path.dirname(os.path.realpath(__file__))
+  token_path = os.path.abspath(os.path.join(file_path, 'files\\', 'token.json'))
 
   user = os.getlogin()
 
@@ -37,16 +37,23 @@ def main():
 
   file_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
   
+  upload_files(file_dir, file_path, service)
+
+  print("Completed")
+
+
+def upload_files(file_dir, file_path, service):
   if os.listdir(file_dir):
-    dir_id = get_parent_dir(service, filepath)
+    dir_id = get_parent_dir(service, file_path)
 
     for f in os.listdir(file_dir):
       print(f)
 
       mimetype = MimeTypes().guess_type(f)[0]
+      
 
       file_metadata = {'name': f, 'parents': [dir_id]}
-                       
+                      
       media = MediaFileUpload(os.path.join(file_dir, f), mimetype=mimetype)
 
       try:
@@ -59,8 +66,6 @@ def main():
       f = None
   else:
     print("Directory %s is empty." % file_dir)
-
-  print("Completed")
 
 
 if __name__ == "__main__":
