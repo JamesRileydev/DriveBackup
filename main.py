@@ -58,7 +58,7 @@ def main():
 
       f = None
   else:
-    print("Directory %s is empty" % file_dir)
+    print("Directory %s is empty." % file_dir)
 
   print("Completed")
 

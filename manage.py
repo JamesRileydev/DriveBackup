@@ -2,6 +2,11 @@ import sys
 import os
 from configparser import ConfigParser
 
+global LOCAL_DIR
+global PARENT_DIR
+
+LOCAL_DIR = 'DriveBackup'
+PARENT_DIR = 'PC_Backup'
 
 def get_parent_dir(service, filepath):
   config_path = os.path.abspath(os.path.join(filepath, 'config.ini'))
@@ -14,15 +19,22 @@ def get_parent_dir(service, filepath):
     print("Getting parent directory ID.")
 
     page_token = None
-
-    response = service.files().list(q="name='Backup'",
-                                    spaces='drive',
-                                    fields='nextPageToken, files(id, name)',
-                                    pageToken=page_token).execute()
+    name = "name='%s'" % PARENT_DIR
+    try:
+      response = service.files().list(q=name,
+                                      spaces='drive',
+                                      fields='nextPageToken, files(id, name)',
+                                      pageToken=page_token).execute()
+    except Exception as ex:
+      print("Exception %s " % ex)  
 
     if not response.get('files', []):
-      print("No id found for file")
-      create_parent_dir(service)
+      print("No id found for file, creating directory in Google Drive")
+
+      parent_dir_id = create_parent_dir(service)
+
+      config.set('drive', 'parent_dir_id', parent_dir_id)
+      config.write(open(config_path, 'w'))
 
     else:
       for file in response.get('files', []):
@@ -37,8 +49,14 @@ def get_parent_dir(service, filepath):
   return parent_dir_id
 
 def create_parent_dir(service):
-  print("Creating parent directory")
-  exit()
+  file_metadata = {
+    'name': PARENT_DIR,
+    'mimeType': 'application/vnd.google-apps.folder'
+  }
+  
+  folder = service.files().create(body=file_metadata,
+                                  fields='id').execute()
+  return folder.get('id')
 
 if __name__ == "__main__":
   print("Manage.py is a module and is not configured as a stand-alone script.")
