@@ -1,12 +1,18 @@
 import sys
 import os
+import shutil
+
 from configparser import ConfigParser
+from datetime import datetime
+
 
 global LOCAL_DIR
 global DRIVE_DIR
+global DRIVE_DIR_ID
 
 LOCAL_DIR = 'Drive_Backup'
 DRIVE_DIR = 'PC_Backup'
+DRIVE_DIR_ID = ''
 
 
 def create_parent_dir(service):
@@ -20,12 +26,42 @@ def create_parent_dir(service):
   return folder.get('id')
 
 
-def copy_file():
-  print("Copy file called.")
+def copy_file(file_dir):
+  tmp_dir = os.path.join(file_dir, 'tmp')
+  if not os.path.exists(tmp_dir):
+    os.mkdir(tmp_dir)
 
+  date = datetime.today().strftime('%Y%m%d')
 
-def get_drive_files():
-  print("Get drive files called.")
+  os.chdir(file_dir)
+ 
+  for f in os.listdir(os.getcwd()):
+    if os.path.isfile(f):   
+      temp_file = os.path.join(os.getcwd(),'tmp', f)
+      
+      if not os.path.exists(temp_file):
+        shutil.copy(f, temp_file)
+
+  os.chdir(tmp_dir)
+  for f in os.listdir(os.getcwd()):
+    name, ext = os.path.splitext(f)
+
+    new_name = name + '_' + date + ext
+    os.rename(f, new_name)
+  
+  print("Files copied")
+  exit()
+
+def get_drive_files(service, id):
+  q = "'%s' in parents" % id
+  print(q)
+
+  results = service.files().list(q=q, 
+                               pageSize=10, 
+                               fields="nextPageToken, files(id, name)").execute()
+  items = results.get('files', [])
+
+  return(items)
 
 
 def get_parent_dir(service, filepath):
@@ -34,6 +70,7 @@ def get_parent_dir(service, filepath):
   config = ConfigParser()
   config.read(config_path)
   parent_dir_id = config.get('drive', 'parent_dir_id')
+  DRIVE_DIR_ID = config.get('drive', "parent_dir_id")
 
   if not parent_dir_id:
     print("Getting parent directory ID.")
