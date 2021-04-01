@@ -7,7 +7,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
-from manage import get_parent_dir, get_drive_files, copy_file
+from manage import get_drive_id, get_drive_files, copy_files, remove_tmp_dir
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -16,7 +16,8 @@ def main():
   token_path = os.path.abspath(os.path.join(file_path, 'files\\', 'token.json'))
 
   user = os.getlogin()
-
+  
+  # Refactor into get_creds method
   creds = None
 
   if os.path.exists(token_path):
@@ -35,37 +36,28 @@ def main():
 
   service = build('drive', 'v3', credentials=creds)
 
-  file_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
-  
-  upload_files(file_dir, file_path, service)
+  local_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
+
+  copied_file_path = upload_files(local_dir, file_path, service)
+
+  remove_tmp_dir(copied_file_path)
 
   print("Completed")
 
 
-def upload_files(file_dir, file_path, service):
-  if os.listdir(file_dir):
-    dir_id = get_parent_dir(service, file_path)
+def upload_files(local_dir, file_path, service):
+  if os.listdir(local_dir):
+    dir_id = get_drive_id(service, file_path)
 
-    copied_file = copy_file(file_dir)
+    copied_files_dir = copy_files(local_dir)
+    print(copied_files_dir)
 
-    existing_files = get_drive_files(service, dir_id)
-    print(existing_files)
-
-    for f in os.listdir(file_dir):
+    for f in os.listdir(copied_files_dir):
       print(f)
 
-      for f in range(0, len(existing_files)):
-        fId = existing_files[f].get('name')
-        print(fId)
-
-      exit()
-
       mimetype = MimeTypes().guess_type(f)[0]
-      
-
       file_metadata = {'name': f, 'parents': [dir_id]}
-                      
-      media = MediaFileUpload(os.path.join(file_dir, f), mimetype=mimetype)
+      media = MediaFileUpload(os.path.join(copied_files_dir, f), mimetype=mimetype)
 
       try:
         service.files().create(body=file_metadata,
@@ -75,8 +67,11 @@ def upload_files(file_dir, file_path, service):
         print("Exception %s " % ex)  
 
       f = None
+    
+    return copied_files_dir
+
   else:
-    print("Directory %s is empty." % file_dir)
+    print("Directory %s is empty." % local_dir)
 
 
 if __name__ == "__main__":
