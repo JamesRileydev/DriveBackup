@@ -7,7 +7,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
-from manage import get_drive_id, get_drive_files, copy_files, remove_tmp_dir
+from manage import get_drive_id, get_drive_files, copy_files, remove_copies
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -39,8 +39,8 @@ def main():
   local_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
 
   copied_file_path = upload_files(local_dir, file_path, service)
-
-  remove_tmp_dir(copied_file_path)
+  
+  remove_copies(copied_file_path)
 
   print("Completed")
 
@@ -50,11 +50,8 @@ def upload_files(local_dir, file_path, service):
     dir_id = get_drive_id(service, file_path)
 
     copied_files_dir = copy_files(local_dir)
-    print(copied_files_dir)
 
     for f in os.listdir(copied_files_dir):
-      print(f)
-
       mimetype = MimeTypes().guess_type(f)[0]
       file_metadata = {'name': f, 'parents': [dir_id]}
       media = MediaFileUpload(os.path.join(copied_files_dir, f), mimetype=mimetype)

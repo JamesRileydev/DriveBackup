@@ -104,9 +104,9 @@ def get_drive_id(service, filepath):
   return drive_dir_id
 
 
-def remove_tmp_dir(copied_file_path):
-  if os.path.isdir(copied_file_path):
-    os.remove(copied_file_path)
+def remove_copies(copied_file_path):
+  for f in os.listdir(copied_file_path):
+    os.remove(f)
 
 if __name__ == "__main__":
   print("Manage.py is a module and is not configured as a stand-alone script.")
