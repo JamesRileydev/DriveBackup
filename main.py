@@ -7,7 +7,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
-from manage import get_drive_id, get_drive_files, copy_files, remove_copies
+from manage import get_drive_ids, get_drive_files, copy_files, remove_copies, move_drive_files
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -36,24 +36,31 @@ def main():
 
   service = build('drive', 'v3', credentials=creds)
 
+  drive_id = get_drive_ids(service, file_path)
+
+  files_in_drive = get_drive_files(service)
+
+
+  move_drive_files(service, files_in_drive)
+
   local_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
 
-  copied_file_path = upload_files(local_dir, file_path, service)
+  copied_file_path = upload_files(local_dir, file_path, service, drive_id)
   
   remove_copies(copied_file_path)
 
   print("Completed")
 
 
-def upload_files(local_dir, file_path, service):
+def upload_files(local_dir, file_path, service, drive_id):
   if os.listdir(local_dir):
-    dir_id = get_drive_id(service, file_path)
+    #dir_id = get_drive_ids(service, file_path)
 
     copied_files_dir = copy_files(local_dir)
 
     for f in os.listdir(copied_files_dir):
       mimetype = MimeTypes().guess_type(f)[0]
-      file_metadata = {'name': f, 'parents': [dir_id]}
+      file_metadata = {'name': f, 'parents': [drive_id]}
       media = MediaFileUpload(os.path.join(copied_files_dir, f), mimetype=mimetype)
 
       try:
@@ -63,6 +70,7 @@ def upload_files(local_dir, file_path, service):
       except Exception as ex:
         print("Exception %s " % ex)  
 
+      print(f)
       f = None
     
     return copied_files_dir
