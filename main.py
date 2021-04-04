@@ -7,76 +7,32 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
-from manage import get_drive_ids, get_drive_files, copy_files, remove_copies, move_drive_files
+from manage import copy_files, remove_copies, get_dir_ids
+import drivesvc
 
-SCOPES = ['https://www.googleapis.com/auth/drive']
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def main():
-  file_path = os.path.dirname(os.path.realpath(__file__))
-  token_path = os.path.abspath(os.path.join(file_path, 'files\\', 'token.json'))
-
   user = os.getlogin()
-  
-  # Refactor into get_creds method
-  creds = None
+  drivesvc.create_service()
 
-  if os.path.exists(token_path):
-    creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+  drive_id, drive_copy_id = get_dir_ids()
 
-  if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-        'credentials.json', SCOPES)
-      creds = flow.run_local_server(port=0)
+  files_in_drive = drivesvc.get_drive_file_ids(drive_id)
 
-    with open(token_path, 'w') as token:
-      token.write(creds.to_json())
+  print(files_in_drive)
 
-  service = build('drive', 'v3', credentials=creds)
-
-  drive_id = get_drive_ids(service, file_path)
-
-  files_in_drive = get_drive_files(service)
-
-
-  move_drive_files(service, files_in_drive)
+  drivesvc.move_drive_files(files_in_drive, drive_copy_id)
 
   local_dir = os.path.dirname(r'C:\Users\%s\DriveBackup\\' % user)
 
-  copied_file_path = upload_files(local_dir, file_path, service, drive_id)
-  
-  remove_copies(copied_file_path)
+  copied_files_dir = copy_files(local_dir)
+
+  drivesvc.upload_files(copied_files_dir, drive_id)
+
+  remove_copies(copied_files_dir)
 
   print("Completed")
-
-
-def upload_files(local_dir, file_path, service, drive_id):
-  if os.listdir(local_dir):
-    #dir_id = get_drive_ids(service, file_path)
-
-    copied_files_dir = copy_files(local_dir)
-
-    for f in os.listdir(copied_files_dir):
-      mimetype = MimeTypes().guess_type(f)[0]
-      file_metadata = {'name': f, 'parents': [drive_id]}
-      media = MediaFileUpload(os.path.join(copied_files_dir, f), mimetype=mimetype)
-
-      try:
-        service.files().create(body=file_metadata,
-                                      media_body=media,
-                                      fields='id').execute()
-      except Exception as ex:
-        print("Exception %s " % ex)  
-
-      print(f)
-      f = None
-    
-    return copied_files_dir
-
-  else:
-    print("Directory %s is empty." % local_dir)
 
 
 if __name__ == "__main__":
