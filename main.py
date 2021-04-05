@@ -14,9 +14,9 @@ FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def main():
   user = os.getlogin()
-  drivesvc.create_service()
+  drivesvc.create_service(FILE_PATH)
 
-  drive_id, drive_copy_id = get_dir_ids()
+  drive_id, drive_copy_id = get_dir_ids(FILE_PATH)
 
   files_in_drive = drivesvc.get_drive_file_ids(drive_id)
 

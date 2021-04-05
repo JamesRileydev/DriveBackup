@@ -8,19 +8,16 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
 from configparser import ConfigParser
+import manage
 
-BACKUP_CONFIG = 'backup.cfg'
-LOCAL_DIR = 'Drive_Backup'
-DRIVE_DIR = 'PC_Backup'
-DRIVE_COPY_DIR = 'PC_Backup.bak'
-FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 SCOPES = ['https://www.googleapis.com/auth/drive']
 SERVICE = ''
 
 
-def create_drive_dir():
+def create_drive_dir(drive_dir):
     file_metadata = {
-        'name': DRIVE_DIR,
+        'name': drive_dir,
         'mimeType': 'application/vnd.google-apps.folder'
     }
 
@@ -29,10 +26,10 @@ def create_drive_dir():
     return folder.get('id')
 
 
-def create_service():
+def create_service(file_path):
     global SERVICE
     token_path = os.path.abspath(os.path.join(
-        FILE_PATH, 'files\\', 'token.json'))
+        file_path, 'files\\', 'token.json'))
 
     creds = None
 
@@ -41,7 +38,11 @@ def create_service():
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except Exception as ex:
+                print("Token has expired: \n%s" % ex)
+                exit(1)
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
@@ -102,7 +103,7 @@ def move_drive_files(files_in_drive, drive_copy_id):
             previous_parents = ",".join(file.get('parents'))
             # Move the file to the new folder
             file = SERVICE.files().update(fileId=f,
-                                          addParents=COPY_DIR_ID,
+                                          addParents=drive_copy_id,
                                           removeParents=previous_parents,
                                           fields='id, parents').execute()
 
