@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
 from configparser import ConfigParser
-import manage
+import localsvc
 
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -81,11 +81,12 @@ def get_drive_id(dir_name):
                                             pageToken=page_token).execute()
         except Exception as ex:
             print("Exception %s " % ex)
+            exit()
 
         if not response.get('files', []):
             print("No id found for file, creating directory in Google Drive")
 
-            return create_drive_dir(name)
+            return create_drive_dir(dir_name)
 
         else:
             for file in response.get('files', []):

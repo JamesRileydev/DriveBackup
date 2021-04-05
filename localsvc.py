@@ -11,6 +11,8 @@ import drivesvc
 BACKUP_CONFIG = 'backup.cfg'
 LOCAL_DIR = ''
 DRIVE_DIR = ''
+DRIVE_COPY_DIR = ''
+
 
 def copy_files(file_dir):
     tmp_dir = get_temp_dir()
@@ -36,8 +38,10 @@ def copy_files(file_dir):
 
     return tmp_dir
 
+
 def get_config_dirs():
     exit("get_config_dirs() called")
+
 
 def get_dir_ids(file_path):
     config_path = os.path.abspath(os.path.join(file_path, BACKUP_CONFIG))
@@ -50,20 +54,31 @@ def get_dir_ids(file_path):
     DRIVE_COPY_DIR = config.get('drive', 'drive_copy_dir')
 
     if not LOCAL_DIR or not DRIVE_DIR or not DRIVE_COPY_DIR:
-      print("Config missing values. Please set")
-      exit()
+        print("Config missing values. Please set")
+        exit()
 
     drive_dir_id = config.get('drive', 'drive_dir_id')
     drive_copy_dir_id = config.get('drive', 'copy_dir_id')
 
     if not drive_dir_id:
-      print("Getting Drive directory ID.")
+        print("Getting Drive directory ID.")
 
-      drive_dir_id = drivesvc.get_drive_id(DRIVE_DIR)
-    
-      print("Setting Drive id: %s" % drive_dir_id)
-      config.set('drive', 'drive_dir_id', drive_dir_id)
-      config.write(open(config_path, 'w'))
+        drive_dir_id = drivesvc.get_drive_id(DRIVE_DIR)
+
+        print("Setting Drive id: %s" % drive_dir_id)
+        config.set('drive', 'drive_dir_id', drive_dir_id)
+        config.write(open(config_path, 'w'))
+
+    if not drive_copy_dir_id:
+        print("Getting Drive copy directory ID.")
+
+        drive_copy_dir_id = drivesvc.get_drive_id(DRIVE_COPY_DIR)
+
+        print("Setting Drive Copy id: %s" % drive_copy_dir_id)
+        config.set('drive', 'copy_dir_id', drive_copy_dir_id)
+        config.write(open(config_path, 'w'))
+
+        drivesvc.move_drive_files([drive_copy_dir_id], drive_dir_id)
 
     return (drive_dir_id, drive_copy_dir_id)
 
@@ -83,7 +98,7 @@ def get_temp_dir():
             config.write(file)
 
     return temp_dir
-       
+
 
 def remove_copies(copied_file_path):
     for f in os.listdir(copied_file_path):
@@ -91,4 +106,4 @@ def remove_copies(copied_file_path):
 
 
 if __name__ == "__main__":
-    print("Manage.py is a module and is not configured as a stand-alone script.")
+    print("localsvc.py is a module and is not configured as a stand-alone script.")

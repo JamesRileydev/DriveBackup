@@ -7,7 +7,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from mimetypes import MimeTypes
-from manage import copy_files, remove_copies, get_dir_ids
+from localsvc import copy_files, remove_copies, get_dir_ids
 import drivesvc
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
