@@ -28,8 +28,8 @@ def create_drive_dir(drive_dir):
 
 def create_service(file_path):
     global SERVICE
-    token_path = os.path.abspath(os.path.join(
-        file_path, 'files\\', 'token.json'))
+    token_path = os.path.abspath(
+        os.path.join(file_path, 'files\\', 'token.json'))
 
     creds = None
 

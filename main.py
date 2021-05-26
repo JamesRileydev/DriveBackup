@@ -1,4 +1,5 @@
 from __future__ import print_function
+import logging
 import os
 import sys
 from googleapiclient.discovery import build
@@ -13,14 +14,20 @@ import drivesvc
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def main():
+  logging.basicConfig(
+    filename='backup.log', 
+    level=logging.INFO, 
+    format='[%(asctime)s][%(levelname)s]: %(message)s', 
+    datefmt='%m-%d-%Y %H:%M:%S')
+
+  logging.info('Started')
+
   user = os.getlogin()
   drivesvc.create_service(FILE_PATH)
 
   drive_id, drive_copy_id = get_dir_ids(FILE_PATH)
 
   files_in_drive = drivesvc.get_drive_file_ids(drive_id)
-
-  print(files_in_drive)
 
   drivesvc.move_drive_files(files_in_drive, drive_copy_id)
 
@@ -32,7 +39,7 @@ def main():
 
   remove_copies(copied_files_dir)
 
-  print("Completed")
+  logging.info("Completed")
 
 
 if __name__ == "__main__":

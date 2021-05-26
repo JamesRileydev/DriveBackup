@@ -1,5 +1,6 @@
-import sys
+import logging
 import os
+import sys
 import shutil
 import tempfile
 
@@ -54,7 +55,7 @@ def get_dir_ids(file_path):
     DRIVE_COPY_DIR = config.get('drive', 'drive_copy_dir')
 
     if not LOCAL_DIR or not DRIVE_DIR or not DRIVE_COPY_DIR:
-        print("Config missing values. Please set")
+        print("Config missing values. Please set.")
         exit()
 
     drive_dir_id = config.get('drive', 'drive_dir_id')
